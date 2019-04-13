@@ -5,7 +5,6 @@ import io.gatling.http.Predef._
 import scala.concurrent.duration._
 
 
-
 class MyTest extends Simulation {
 
   val httpProtocol = http
@@ -16,74 +15,69 @@ class MyTest extends Simulation {
     .userAgentHeader("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:16.0) Gecko/20100101 Firefox/16.0")
 
   val headers_0 = Map("Upgrade-Insecure-Requests" -> "1")
-	
+  
+  val csvFeeder = csv("123.csv").circular
+  
 // 1. просмотр страницы
-/*
-  val scn = scenario("Open_Page") 
-    .exec(http("Open_Page")
+  val openItem = exec(
+        http("Open_Page")
 		.get("/")
 		.headers(headers_0)
-		.check(status.is(200))
-		)
+		.check(status.is(200)))
 
 // 2. добавление записи
-
-   val csvFeeder = csv("123.csv").random
-
-   val scn = scenario("test")
-	   .feed(csvFeeder)
-       .exec(http("Add_pc")
+  val addItem = feed(csvFeeder)
+    .exec(http("Add_pc")
 		.post("/computers")
 		.formParam("name", "${name}")
 		.formParam("introduced", "")
 		.formParam("discontinued", "")
-		.formParam("company", "")) 
-*/
+		.formParam("company", ""))  
+
 	
 // 3. удаление записи
-	
-  val del = scenario("test")
-    .pause(5)
-    .exec(http("test")
-	  .get("/computers")
-	  .check(regex("""(?<=<td><a href=").*(?=">)""").find.saveAs("computerURL")) 
-	)
-    .exec(http("Del_pc")
-      .post("${computerURL}/delete")
-	)
-		
-//end-----------------------------------------------
-
-		
-//сценарии
-
-  //setUp(scn.inject(atOnceUsers(20)).protocols(httpProtocol))
-  setUp(del.inject(constantUsersPerSec(1) during (20 seconds)))
-//
-
-//поиск максимума
-  setUp(
-  scn.inject(
-    rampUsersPerSec(0) to 50 during (5 minutes),
-    constantUsersPerSec(50) during (30 minutes), //1	
-    rampUsersPerSec(50) to 100 during (5 minutes),
-    constantUsersPerSec(100) during (30 minutes), //2
-	rampUsersPerSec(100) to 150 during (5 minutes),
-    constantUsersPerSec(150) during (30 minutes), //3
-	rampUsersPerSec(150) to 200 during (5 minutes),
-    constantUsersPerSec(200) during (30 minutes), //4
-	rampUsersPerSec(200) to 0 during (2 minutes),
-    )).maxDuration(90 minutes).protocols(httpProtocol)
-//
-
-//тест стабильности
-  setUp(
-  scn.inject(
-    rampUsersPerSec(0) to 150 during (5 minutes),
-    constantUsersPerSec(150) during (300 minutes), //5h
-    rampUsersPerSec(150) to 0 during (2 minutes),
-    )).maxDuration(310 minutes).protocols(httpProtocol)
+  val delItem = exec(
+        http("Del_pc")
+		.get("/computers")
+		//.get("/computers?f=hp")
+		.check(regex("""(?<=<td><a href=").*(?=">)""").find.saveAs("computerURL")))
+    .exec(http("Del_pc2")
+		.post("${computerURL}/delete"))
+//---
 
 
+
+
+//планировщик
+  val snc = scenario("TestCode") randomSwitch(
+	 (85d, openItem),
+	 (10d, addItem),
+	 (5d, delItem)
+	 )
+
+// поиск максимума
+  setUp(snc.inject(
+    rampUsersPerSec(0) to 20 during (2 minutes),
+    constantUsersPerSec(20) during (10 minutes),
+    rampUsersPerSec(20) to 40 during (2 minutes),
+    constantUsersPerSec(40) during (10 minutes),
+    rampUsersPerSec(40) to 60 during (2 minutes),
+    constantUsersPerSec(60) during (10 minutes),
+    rampUsersPerSec(60) to 80 during (2 minutes),
+    constantUsersPerSec(80) during (10 minutes),
+    rampUsersPerSec(80) to 100 during (2 minutes),
+    constantUsersPerSec(100) during (10 minutes),
+    rampUsersPerSec(100) to 120 during (2 minutes),
+    constantUsersPerSec(120) during (10 minutes),
+    rampUsersPerSec(120) to 140 during (2 minutes),
+    constantUsersPerSec(140) during (10 minutes),
+    rampUsersPerSec(140) to 160 during (2 minutes),
+    constantUsersPerSec(160) during (10 minutes),
+    rampUsersPerSec(160) to 180 during (2 minutes),
+    constantUsersPerSec(180) during (10 minutes),
+    rampUsersPerSec(180) to 200 during (2 minutes),
+    constantUsersPerSec(200) during (10 minutes)
+	).protocols(httpProtocol)).maxDuration(120 minutes)
+
+  //setUp(snc.inject(rampUsersPerSec(0) to 10 during (30 seconds)).protocols(httpProtocol))
 }
-
