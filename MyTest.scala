@@ -5,6 +5,7 @@ import io.gatling.http.Predef._
 import scala.concurrent.duration._
 
 
+
 class MyTest extends Simulation {
 
   val httpProtocol = http
@@ -45,9 +46,6 @@ class MyTest extends Simulation {
 		.post("${computerURL}/delete"))
 //---
 
-
-
-
 //планировщик
   val snc = scenario("TestCode") randomSwitch(
 	 (85d, openItem),
@@ -56,7 +54,7 @@ class MyTest extends Simulation {
 	 )
 
 // поиск максимума
-  setUp(snc.inject(
+/*   setUp(snc.inject(
     rampUsersPerSec(0) to 20 during (2 minutes),
     constantUsersPerSec(20) during (10 minutes),
     rampUsersPerSec(20) to 40 during (2 minutes),
@@ -77,7 +75,17 @@ class MyTest extends Simulation {
     constantUsersPerSec(180) during (10 minutes),
     rampUsersPerSec(180) to 200 during (2 minutes),
     constantUsersPerSec(200) during (10 minutes)
-	).protocols(httpProtocol)).maxDuration(120 minutes)
+    ).protocols(httpProtocol)).maxDuration(120 minutes) */
 
-  //setUp(snc.inject(rampUsersPerSec(0) to 10 during (30 seconds)).protocols(httpProtocol))
+
+// тест стабильности на 110 (92)
+  setUp(snc.inject(
+    rampUsersPerSec(0) to 92 during (5 minutes),
+    constantUsersPerSec(92) during (120 minutes)
+    ).protocols(httpProtocol)).maxDuration(130 minutes)
+	
+//smoke test
+/*    setUp(snc.inject(
+     rampUsersPerSec(0) to 10 during (30 seconds)
+	 ).protocols(httpProtocol)) */  
 }
